@@ -47,6 +47,14 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -56,6 +64,16 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        blood: {
+          "a-plus": "hsl(var(--blood-a-plus))",
+          "a-minus": "hsl(var(--blood-a-minus))",
+          "b-plus": "hsl(var(--blood-b-plus))",
+          "b-minus": "hsl(var(--blood-b-minus))",
+          "ab-plus": "hsl(var(--blood-ab-plus))",
+          "ab-minus": "hsl(var(--blood-ab-minus))",
+          "o-plus": "hsl(var(--blood-o-plus))",
+          "o-minus": "hsl(var(--blood-o-minus))",
         },
       },
       borderRadius: {
