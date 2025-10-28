@@ -116,13 +116,30 @@ export const DATABASE_CONFIG = {
   port: 3306,
 };
 
-// Placeholder function for MySQL connection
+// executeSQLQuery will call the local backend if VITE_API_URL is set
 export const executeSQLQuery = async (query: string, params?: any[]): Promise<any> => {
-  console.log("SQL Query Placeholder:", query, params);
-  // TODO: Implement actual MySQL connection
-  // const mysql = require('mysql2/promise');
-  // const connection = await mysql.createConnection(DATABASE_CONFIG);
-  // const [rows] = await connection.execute(query, params);
-  // return rows;
-  throw new Error("Database connection not implemented. Using mock data.");
+  try {
+    const apiBase = (import.meta as any).env?.VITE_API_URL || '';
+    if (!apiBase) {
+      // No backend configured — keep placeholder behavior
+      console.log("SQL Query Placeholder (no VITE_API_URL):", query, params);
+      throw new Error("Database connection not configured. Set VITE_API_URL to enable.");
+    }
+
+    const res = await fetch(`${apiBase.replace(/\/+$/, '')}/api/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, params }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json?.error || 'Query failed');
+    }
+
+    return json.rows;
+  } catch (err: any) {
+    console.error('executeSQLQuery error:', err?.message || err);
+    throw err;
+  }
 };
