@@ -2,23 +2,43 @@ import { Users, Package, FileText, AlertCircle, Activity, TrendingUp } from "luc
 import StatCard from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { mockDonors, mockInventory, mockRequests, getBloodTypeColor } from "@/lib/mockData";
+import { useEffect, useState } from "react";
+import { getDonors, getInventory, getRequests } from "@/lib/apiClient";
+import { Donor, BloodInventory, BloodRequest, getBloodTypeColor } from "@/lib/mockData";
 
 const Dashboard = () => {
   // Calculate statistics
-  const totalDonors = mockDonors.length;
-  const availableUnits = mockInventory.filter((item) => item.Status === "Available").length;
-  const pendingRequests = mockRequests.filter((req) => req.Status === "Pending").length;
-  const recentDonations = mockDonors.filter((d) => d.LastDonationDate).length;
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [inventory, setInventory] = useState<BloodInventory[]>([]);
+  const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([getDonors(), getInventory(), getRequests()])
+      .then(([donorData, invData, reqData]) => {
+        setDonors(donorData);
+        setInventory(invData);
+        setRequests(reqData);
+      })
+      .catch((err) => setError(err.message || "Failed to fetch dashboard data"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const totalDonors = donors.length;
+  const availableUnits = inventory.filter((item) => item.Status === "Available").length;
+  const pendingRequests = requests.filter((req) => req.Status === "Pending").length;
+  const recentDonations = donors.filter((d) => d.LastDonationDate).length;
 
   // Blood type availability
   const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
   const bloodTypeStats = bloodTypes.map((type) => ({
     type,
-    count: mockInventory.filter((item) => item.BloodType === type && item.Status === "Available").length,
+    count: inventory.filter((item) => item.BloodType === type && item.Status === "Available").length,
   }));
 
-  // Recent activities
+  // Recent activities (placeholder, can be replaced with real data)
   const recentActivities = [
     { type: "donation", donor: "John Doe", bloodType: "O+", time: "2 hours ago" },
     { type: "request", hospital: "General Hospital", bloodType: "A+", units: 3, time: "4 hours ago" },
