@@ -483,6 +483,41 @@ BEGIN
 END$$
 DELIMITER ;
 
+-- -----------------------------------------------------------------------------------
+-- PROCEDURE 4: sp_GetHospitalRequestHistory
+--
+-- PURPOSE: Retrieves a full history of all blood requests for a single
+--          hospital, including the human-readable name of the blood bank
+--          that the request was sent to.
+--
+-- @param   hospitalID_param INT - The ID of the hospital to check.
+--
+-- TO CALL:
+-- CALL sp_GetHospitalRequestHistory(1); -- (Assuming 1 is a valid HospitalID)
+-- -----------------------------------------------------------------------------------
+
+DELIMITER $$
+CREATE PROCEDURE sp_GetHospitalRequestHistory(
+    IN hospitalID_param INT
+)
+BEGIN
+    SELECT
+        r.RequestID,
+        r.RequestDate,
+        b.Name AS BloodBankName,  -- This data comes from the JOIN
+        r.RequiredBloodType,
+        r.UnitsNeeded,
+        r.Status
+    FROM
+        BloodRequests AS r
+    JOIN
+        BloodBanks AS b ON r.BankID = b.BankID
+    WHERE
+        r.HospitalID = hospitalID_param
+    ORDER BY
+        r.RequestDate DESC;
+END$$
+DELIMITER ;
 
 -- Insert two new donors.
 -- Their 'LastDonationDate' will be NULL by default.
@@ -524,3 +559,33 @@ SET Status = 'Used'
 WHERE BagID = 2;
 -- You should receive an error message similar to:
 -- "Error: Cannot mark blood as "Used". This unit expired on ..."
+
+
+-- NESTED QUERY 1: Finding Donors with a Specific Blood Type
+SELECT
+    FirstName,
+    LastName,
+    PhoneNumber
+FROM
+    Donors
+WHERE
+    DonorID IN (
+        -- This is the nested query (subquery)
+        SELECT DonorID
+        FROM BloodInventory
+        WHERE BloodType = 'O-'
+    );
+
+-- NESTED QUERY 2: Finding Donors Who Have Never Donated
+SELECT
+    FirstName,
+    LastName,
+    Email
+FROM
+    Donors
+WHERE
+    DonorID NOT IN (
+        -- This is the nested query (subquery)
+        SELECT DISTINCT DonorID
+        FROM BloodInventory
+    );
