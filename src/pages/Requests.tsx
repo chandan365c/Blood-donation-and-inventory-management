@@ -269,7 +269,7 @@ const Requests = () => {
         </CardContent>
       </Card>
 
-      {/* Database Note */}
+      {/* Database Note 
       <Card className="border-primary bg-primary/5">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
@@ -279,6 +279,7 @@ const Requests = () => {
           </p>
         </CardContent>
       </Card>
+      */}
     </div>
   );
 };

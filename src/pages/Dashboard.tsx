@@ -110,7 +110,7 @@ const Dashboard = () => {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Recent Activities */}
+        {/* Recent Activities 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -142,7 +142,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Alerts */}
+        {/* Alerts
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -176,6 +176,7 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+        */}
       </div>
     </div>
   );
