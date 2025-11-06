@@ -78,10 +78,10 @@ const Dashboard = () => {
           color="warning"
         />
         <StatCard
-          title="Recent Donations"
+          title="Total Donations"
           value={recentDonations}
           icon={Activity}
-          description="Last 30 days"
+          description="Done till now"
           color="primary"
         />
       </div>
