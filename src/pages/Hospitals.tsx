@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { getHospitals, getRequests, createHospital, updateHospital } from "@/lib/apiClient";
-import { Hospital, BloodRequest } from "@/lib/mockData";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getHospitals, getRequests, createHospital, updateHospital, getHospitalRequestHistory } from "@/lib/apiClient";
+import { Hospital, BloodRequest, HospitalRequestHistory, getBloodTypeColor, getStatusColor } from "@/lib/mockData";
 
 const Hospitals = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
@@ -27,6 +28,10 @@ const Hospitals = () => {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  const [history, setHistory] = useState<HospitalRequestHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   const getHospitalRequests = (hospitalId: number) => {
     return requests.filter((req) => req.HospitalID === hospitalId);
@@ -66,6 +71,20 @@ const Hospitals = () => {
   const openView = (hospital: Hospital) => {
     setSelectedHospital(hospital);
     setViewOpen(true);
+    setHistoryLoading(true);
+    setHistory([]);
+    setHistoryError(null);
+
+    getHospitalRequestHistory(hospital.HospitalID)
+      .then((data) => {
+        setHistory(data);
+      })
+      .catch((err) => {
+        setHistoryError(err.message || "Failed to fetch request history");
+      })
+      .finally(() => {
+        setHistoryLoading(false);
+      });
   };
 
   const openEdit = (hospital: Hospital) => {
@@ -203,7 +222,7 @@ const Hospitals = () => {
 
       {/* View Dialog */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-3xl"> {/* Made dialog wider */}
           <DialogHeader>
             <DialogTitle>Hospital Details</DialogTitle>
             <DialogDescription>{selectedHospital?.Name}</DialogDescription>
@@ -211,6 +230,66 @@ const Hospitals = () => {
           <div className="space-y-3 pt-2">
             <p><strong>Name:</strong> {selectedHospital?.Name}</p>
             <p><strong>Address:</strong> {selectedHospital?.Address}</p>
+          </div>
+
+          <hr className="my-4" />
+
+          {/* History Section */}
+          <div className="space-y-2">
+            <h4 className="text-lg font-semibold">Request History</h4>
+            {historyLoading ? (
+              <p className="text-muted-foreground">Loading history...</p>
+            ) : historyError ? (
+              <p className="text-destructive">{historyError}</p>
+            ) : history.length === 0 ? (
+              <p className="text-muted-foreground">No request history found for this hospital.</p>
+            ) : (
+              <div className="max-h-[300px] overflow-y-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Request ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Blood Bank</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Units</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {history.map((item) => (
+                      <TableRow key={item.RequestID}>
+                        <TableCell>{item.RequestID}</TableCell>
+                        <TableCell>{new Date(item.RequestDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{item.BloodBankName}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-${getBloodTypeColor(item.RequiredBloodType)}/10 text-${getBloodTypeColor(
+                              item.RequiredBloodType,
+                            )} hover:bg-${getBloodTypeColor(item.RequiredBloodType)}/20`}
+                          >
+                            {item.RequiredBloodType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{item.UnitsNeeded}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={item.Status === "Pending" ? "secondary" : "default"}
+                            className={
+                              item.Status === "Pending"
+                                ? "bg-warning/10 text-warning"
+                                : "bg-success/10 text-success"
+                            }
+                          >
+                            {item.Status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

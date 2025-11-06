@@ -127,6 +127,38 @@ app.put('/api/hospitals/:id', async (req, res) => {
   }
 });
 
+// GET /api/hospitals/:id/requesthistory
+// Fetches the request history for a specific hospital
+app.get("/api/hospitals/:id/requesthistory", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "Hospital ID is required" });
+  }
+
+  try {
+    // 1. Call your stored procedure using the 'pool' variable
+    const [results] = await pool.query(
+      "CALL sp_GetHospitalRequestHistory(?)", 
+      [id]
+    );
+
+    // 2. The stored procedure's result is in the first element (results[0])
+    if (!results || !Array.isArray(results[0])) {
+      throw new Error("Invalid response from stored procedure.");
+    }
+
+    // 3. Send the data (which is results[0]) as JSON.
+    //    If no history was found, this correctly sends []
+    res.json(results[0]);
+
+  } catch (err) {
+    // 4. Handle any database or server errors
+    console.error(`Error fetching history for hospital ${id}:`, err);
+    res.status(500).json({ error: "Failed to fetch hospital request history" });
+  }
+});
+
 // --- BloodBanks ---
 app.get('/api/bloodbanks', async (req, res) => {
   try {
