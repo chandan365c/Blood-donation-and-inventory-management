@@ -1,9 +1,10 @@
+import React, { useEffect, useState } from "react";
 import { Hospital as HospitalIcon, MapPin, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
-import { getHospitals, getRequests } from "@/lib/apiClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { getHospitals, getRequests, createHospital, updateHospital } from "@/lib/apiClient";
 import { Hospital, BloodRequest } from "@/lib/mockData";
 
 const Hospitals = () => {
@@ -22,6 +23,10 @@ const Hospitals = () => {
       .catch((err) => setError(err.message || "Failed to fetch hospitals/requests"))
       .finally(() => setLoading(false));
   }, []);
+
+  const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const getHospitalRequests = (hospitalId: number) => {
     return requests.filter((req) => req.HospitalID === hospitalId);
@@ -46,15 +51,40 @@ const Hospitals = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await (await import("@/lib/apiClient")).createHospital({
-        ...form,
-      });
+      await createHospital({ ...form });
       setForm({ Name: '', Address: '' });
       // Refresh hospitals
       const updated = await getHospitals();
       setHospitals(updated);
     } catch (err) {
       alert(err.message || "Failed to create hospital");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openView = (hospital: Hospital) => {
+    setSelectedHospital(hospital);
+    setViewOpen(true);
+  };
+
+  const openEdit = (hospital: Hospital) => {
+    setSelectedHospital(hospital);
+    setForm({ Name: hospital.Name || '', Address: hospital.Address || '' });
+    setEditOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedHospital) return;
+    setSubmitting(true);
+    try {
+      await updateHospital(selectedHospital.HospitalID, { ...form });
+      const updated = await getHospitals();
+      setHospitals(updated);
+      setEditOpen(false);
+    } catch (err: any) {
+      alert(err?.message || "Failed to update hospital");
     } finally {
       setSubmitting(false);
     }
@@ -146,12 +176,12 @@ const Hospitals = () => {
                   )}
 
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View Requests
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      Edit
-                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => openView(hospital)}>
+                        View Details
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(hospital)}>
+                        Edit
+                      </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -160,7 +190,7 @@ const Hospitals = () => {
         </div>
       )}
 
-      {/* Database Note */}
+      {/* Database Note
       <Card className="border-primary bg-primary/5">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
@@ -169,6 +199,47 @@ const Hospitals = () => {
           </p>
         </CardContent>
       </Card>
+      */}
+
+      {/* View Dialog */}
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Hospital Details</DialogTitle>
+            <DialogDescription>{selectedHospital?.Name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <p><strong>Name:</strong> {selectedHospital?.Name}</p>
+            <p><strong>Address:</strong> {selectedHospital?.Address}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Hospital</DialogTitle>
+            <DialogDescription>Edit details and save</DialogDescription>
+          </DialogHeader>
+          <form className="grid gap-4" onSubmit={handleEditSubmit}>
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <input name="Name" value={form.Name} onChange={(e)=>setForm({...form, Name: e.target.value})} className="w-full border rounded px-2 py-1" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Address</label>
+              <input name="Address" value={form.Address} onChange={(e)=>setForm({...form, Address: e.target.value})} className="w-full border rounded px-2 py-1" required />
+            </div>
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={submitting}>Save</Button>
+                <Button variant="ghost" onClick={()=>setEditOpen(false)}>Cancel</Button>
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

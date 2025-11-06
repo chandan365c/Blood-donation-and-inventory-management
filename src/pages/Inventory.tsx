@@ -92,10 +92,6 @@ const Inventory = () => {
           <h2 className="text-3xl font-bold text-foreground">Blood Inventory</h2>
           <p className="text-muted-foreground">Track blood units and stock levels</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <Package className="h-4 w-4" />
-          Record Donation
-        </Button>
       </div>
 
       {/* Record Donation Form */}

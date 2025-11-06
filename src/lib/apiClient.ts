@@ -49,6 +49,16 @@ export function createHospital(payload: { Name: string; Address: string }) {
     body: JSON.stringify(payload),
   }).then(handle);
 }
+export function getHospitalById(id: number) {
+  return fetch(`${API_BASE}/api/hospitals/${id}`).then(handle);
+}
+export function updateHospital(id: number, payload: { Name: string; Address: string }) {
+  return fetch(`${API_BASE}/api/hospitals/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(handle);
+}
 
 // --- BloodBanks ---
 export function getBloodBanks() {
@@ -57,6 +67,16 @@ export function getBloodBanks() {
 export function createBloodBank(payload: { Name: string; Address: string; ContactPerson?: string }) {
   return fetch(`${API_BASE}/api/bloodbanks`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }).then(handle);
+}
+export function getBloodBankById(id: number) {
+  return fetch(`${API_BASE}/api/bloodbanks/${id}`).then(handle);
+}
+export function updateBloodBank(id: number, payload: { Name: string; Address: string; ContactPerson?: string }) {
+  return fetch(`${API_BASE}/api/bloodbanks/${id}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then(handle);
