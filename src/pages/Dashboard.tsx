@@ -60,7 +60,7 @@ const Dashboard = () => {
           value={totalDonors}
           icon={Users}
           description="Registered donors"
-          trend="+12% from last month"
+          //trend="+12% from last month"
           color="primary"
         />
         <StatCard
