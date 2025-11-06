@@ -44,6 +44,15 @@ export interface BloodRequest {
   Status: string;
 }
 
+export interface HospitalRequestHistory {
+  RequestID: number;
+  RequestDate: string;
+  BloodBankName: string;
+  RequiredBloodType: string;
+  UnitsNeeded: number;
+  Status: string;
+}
+
 // Mock data
 export const mockDonors: Donor[] = [
   { DonorID: 1, FirstName: "John", LastName: "Doe", BloodType: "O+", PhoneNumber: "555-0101", City: "New York", LastDonationDate: "2024-09-15" },
