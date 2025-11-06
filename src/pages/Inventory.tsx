@@ -220,8 +220,8 @@ const Inventory = () => {
                       </TableCell>
                       <TableCell>{getDonorName(item.DonorID)}</TableCell>
                       <TableCell className="text-sm">{getBankName(item.BankID)}</TableCell>
-                      <TableCell>{item.CollectionDate}</TableCell>
-                      <TableCell>{item.ExpiryDate}</TableCell>
+                      <TableCell>{new Date(item.CollectionDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(item.ExpiryDate).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <span
                           className={`font-medium ${

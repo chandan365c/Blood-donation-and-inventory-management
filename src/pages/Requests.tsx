@@ -205,7 +205,7 @@ const Requests = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium">{request.UnitsNeeded}</TableCell>
-                      <TableCell>{request.RequestDate}</TableCell>
+                      <TableCell>{new Date(request.RequestDate).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="bg-warning/10 text-warning">
                           {request.Status}
@@ -257,7 +257,7 @@ const Requests = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">{request.UnitsNeeded}</TableCell>
-                    <TableCell>{request.RequestDate}</TableCell>
+                    <TableCell>{new Date(request.RequestDate).toLocaleDateString()}</TableCell>
                     <TableCell>
                       <Badge className="bg-success/10 text-success">{request.Status}</Badge>
                     </TableCell>
