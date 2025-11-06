@@ -231,15 +231,35 @@ app.post('/api/inventory', async (req, res) => {
   if (!DonorID || !BankID || !BloodType || !CollectionDate) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
+
   try {
-    const [result] = await pool.execute(
+    // 1. Check eligibility by calling your function
+    const [[result]] = await pool.query(
+      'SELECT CheckDonorEligibility(?) AS isEligible',
+      [DonorID]
+    );
+
+    const isEligible = result.isEligible; // This will be 1 (true) or 0 (false)
+
+    // 2. If not eligible, reject the request
+    if (isEligible === 0) {
+      return res.status(400).json({ error: 'Donor is not eligible to donate yet (must wait 56 days).' });
+    }
+
+    // 3. If eligible (isEligible === 1), proceed with the insert
+    const [insertResult] = await pool.execute(
       `INSERT INTO BloodInventory (DonorID, BankID, BloodType, CollectionDate) VALUES (?, ?, ?, ?)`,
       [DonorID, BankID, BloodType, CollectionDate]
     );
-    const insertedId = result.insertId;
+    
+    // 4. Send back the newly created item
+    const insertedId = insertResult.insertId;
     const [[row]] = await pool.query('SELECT * FROM BloodInventory WHERE BagID = ?', [insertedId]);
     res.status(201).json(row);
+
   } catch (err) {
+    // Catch any other database errors
+    console.error("Error in POST /api/inventory:", err);
     res.status(500).json({ error: err.message });
   }
 });

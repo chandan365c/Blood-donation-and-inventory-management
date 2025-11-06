@@ -13,19 +13,20 @@ function handle(res: Response) {
     return res.json();
   }
 
-  // If the response was NOT ok, try to get a text error message
-  // This avoids the JSON.parse error
+  // If the response was NOT ok (like a 400), try to get a text error message
   return res.text().then((text) => {
-    // Try to parse it as JSON in case the error *was* sent as JSON
+    let json;
     try {
-      const json = JSON.parse(text);
-      throw new Error(json?.error || 'Request failed');
+      // Try to parse the text as JSON
+      json = JSON.parse(text);
     } catch (e) {
-      // If it wasn't JSON, throw the raw text (which is probably the HTML error page)
-      // This is less clean but helps debugging
+      // If parsing fails, it wasn't JSON. Throw the generic status text.
       console.error("Non-JSON error response:", text);
       throw new Error(res.statusText || 'Request failed');
     }
+
+    // If parsing succeeded, throw the *specific error* from the JSON body.
+    throw new Error(json?.error || res.statusText || 'Request failed');
   });
 }
 
