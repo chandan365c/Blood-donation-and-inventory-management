@@ -185,7 +185,7 @@ const Donors = () => {
                       </TableCell>
                       <TableCell>{donor.PhoneNumber}</TableCell>
                       <TableCell>{donor.City}</TableCell>
-                      <TableCell>{donor.LastDonationDate || "Never"}</TableCell>
+                      <TableCell>{donor.LastDonationDate ? new Date(donor.LastDonationDate).toLocaleDateString() : "Never"}</TableCell>
                       <TableCell>
                         <Badge variant={isEligible(donor.LastDonationDate) ? "default" : "secondary"}>
                           {isEligible(donor.LastDonationDate) ? "Eligible" : "Ineligible"}

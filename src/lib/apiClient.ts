@@ -5,10 +5,27 @@ const rawApiBase = import.meta.env?.VITE_API_URL || '';
 const devFallback = (import.meta.env && (import.meta.env.MODE !== 'production')) ? 'http://localhost:3001' : '';
 const API_BASE = (rawApiBase || devFallback).replace(/\/+$/, '');
 
+// A new, more robust handle function
 function handle(res: Response) {
-  return res.json().then((json) => {
-    if (!res.ok) throw new Error(json?.error || 'Request failed');
-    return json;
+  // First, check if the response is successful
+  if (res.ok) {
+    // If it's OK, parse it as JSON
+    return res.json();
+  }
+
+  // If the response was NOT ok, try to get a text error message
+  // This avoids the JSON.parse error
+  return res.text().then((text) => {
+    // Try to parse it as JSON in case the error *was* sent as JSON
+    try {
+      const json = JSON.parse(text);
+      throw new Error(json?.error || 'Request failed');
+    } catch (e) {
+      // If it wasn't JSON, throw the raw text (which is probably the HTML error page)
+      // This is less clean but helps debugging
+      console.error("Non-JSON error response:", text);
+      throw new Error(res.statusText || 'Request failed');
+    }
   });
 }
 
@@ -58,6 +75,11 @@ export function updateHospital(id: number, payload: { Name: string; Address: str
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   }).then(handle);
+}
+export function getHospitalRequestHistory(id: number) {
+  // This function assumes you have a backend endpoint that calls your stored procedure
+  // e.g., GET /api/hospitals/:id/requesthistory
+  return fetch(`${API_BASE}/api/hospitals/${id}/requesthistory`).then(handle);
 }
 
 // --- BloodBanks ---
