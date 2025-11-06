@@ -353,8 +353,8 @@ BEGIN
     END;
 
     -- Insert the new donor
-    INSERT INTO Donors (FirstName, LastName, BloodType, PhoneNumber, Email, City)
-    VALUES (firstName_param, lastName_param, bloodType_param, phone_param, email_param, city_param);
+    INSERT INTO Donors (FirstName, LastName, BloodType, PhoneNumber, City)
+    VALUES (firstName_param, lastName_param, bloodType_param, phone_param, city_param);
 END$$
 DELIMITER ;
 
@@ -579,8 +579,7 @@ WHERE
 -- NESTED QUERY 2: Finding Donors Who Have Never Donated
 SELECT
     FirstName,
-    LastName,
-    Email
+    LastName
 FROM
     Donors
 WHERE
