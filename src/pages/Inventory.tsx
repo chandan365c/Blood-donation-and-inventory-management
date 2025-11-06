@@ -63,6 +63,27 @@ const Inventory = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleDonorSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const donorIdString = e.target.value;
+    const selectedDonor = donors.find(d => d.DonorID === Number(donorIdString));
+
+    if (selectedDonor) {
+      // Auto-set the blood type based on the selected donor
+      setForm({
+        ...form,
+        DonorID: donorIdString,
+        BloodType: selectedDonor.BloodType,
+      });
+    } else {
+      // Clear fields if "Select Donor" is chosen
+      setForm({
+        ...form,
+        DonorID: '',
+        BloodType: '',
+      });
+    }
+  };
+
   const handleCreateDonation = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -103,16 +124,31 @@ const Inventory = () => {
           <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateDonation}>
             <div>
               <label className="block text-sm font-medium mb-1">Donor</label>
-              <select name="DonorID" value={form.DonorID} onChange={handleFormChange} className="w-full border rounded px-2 py-1">
+              {/* Use the new handler here */}
+              <select 
+                name="DonorID" 
+                value={form.DonorID} 
+                onChange={handleDonorSelectChange} 
+                className="w-full border rounded px-2 py-1"
+              >
                 <option value="">Select Donor</option>
                 {donors.map(d => (
-                  <option key={d.DonorID} value={d.DonorID}>{d.FirstName} {d.LastName}</option>
+                  // Added blood type to the option text for clarity
+                  <option key={d.DonorID} value={d.DonorID}>
+                    {d.FirstName} {d.LastName} ({d.BloodType})
+                  </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Blood Bank</label>
-              <select name="BankID" value={form.BankID} onChange={handleFormChange} className="w-full border rounded px-2 py-1">
+              {/* This field uses the generic handler */}
+              <select 
+                name="BankID" 
+                value={form.BankID} 
+                onChange={handleFormChange} 
+                className="w-full border rounded px-2 py-1"
+              >
                 <option value="">Select Blood Bank</option>
                 {banks.map(b => (
                   <option key={b.BankID} value={b.BankID}>{b.Name}</option>
@@ -121,15 +157,29 @@ const Inventory = () => {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Blood Type</label>
-              <select name="BloodType" value={form.BloodType} onChange={handleFormChange} className="w-full border rounded px-2 py-1">
-                <option value="">Select Type</option>
+              {/* This field is now disabled and auto-filled */}
+              <select 
+                name="BloodType" 
+                value={form.BloodType} 
+                onChange={handleFormChange} 
+                className="w-full border rounded px-2 py-1 bg-muted" 
+                disabled 
+              >
+                <option value="">Select donor to auto-fill</option>
                 {["A+","A-","B+","B-","AB+","AB-","O+","O-"]
                   .map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Collection Date</label>
-              <input name="CollectionDate" type="date" value={form.CollectionDate} onChange={handleFormChange} className="w-full border rounded px-2 py-1" required />
+              <input 
+                name="CollectionDate" 
+                type="date" 
+                value={form.CollectionDate} 
+                onChange={handleFormChange} 
+                className="w-full border rounded px-2 py-1" 
+                required 
+              />
             </div>
             <div className="md:col-span-2">
               <Button type="submit" disabled={submitting || !form.DonorID || !form.BankID || !form.BloodType || !form.CollectionDate}>
