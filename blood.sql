@@ -454,32 +454,38 @@ BEGIN
     WHERE RequestID = requestID_param AND Status = 'Pending'
     FOR UPDATE; -- Locks the request row to prevent other changes
 
-    -- 2. Check for sufficient stock
-    SET available_units = GetAvailableUnits(blood_type, bank_id);
+        -- 2. Check for sufficient stock (ignore expired units)
+        SELECT COUNT(*) INTO available_units
+        FROM BloodInventory
+        WHERE BloodType = blood_type
+            AND BankID = bank_id
+            AND Status = 'Available'
+            AND ExpiryDate >= CURDATE();
 
-    IF available_units < units_needed THEN
-        -- Not enough stock. Roll back and signal an error.
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Insufficient stock to fulfill this request.';
-    ELSE
-        -- 3. We have stock. Update the oldest available units in inventory.
-        UPDATE BloodInventory
-        SET Status = 'Used'
-        WHERE BankID = bank_id
-          AND BloodType = blood_type
-          AND Status = 'Available'
-        ORDER BY ExpiryDate ASC -- Use the oldest blood first
-        LIMIT units_needed;     -- Fulfill the exact number needed
+        IF available_units < units_needed THEN
+            -- Not enough non-expired stock. Roll back and signal an error.
+            ROLLBACK;
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Error: Insufficient non-expired stock to fulfill this request.';
+        ELSE
+            -- 3. We have sufficient non-expired stock. Update the oldest available (non-expired) units in inventory.
+            UPDATE BloodInventory
+            SET Status = 'Used'
+            WHERE BankID = bank_id
+                AND BloodType = blood_type
+                AND Status = 'Available'
+                AND ExpiryDate >= CURDATE()
+            ORDER BY ExpiryDate ASC -- Use the oldest non-expired blood first
+            LIMIT units_needed;     -- Fulfill the exact number needed
 
-        -- 4. Update the blood request to show it's fulfilled
-        UPDATE BloodRequests
-        SET Status = 'Fulfilled'
-        WHERE RequestID = requestID_param;
+            -- 4. Update the blood request to show it's fulfilled
+            UPDATE BloodRequests
+            SET Status = 'Fulfilled'
+            WHERE RequestID = requestID_param;
 
-        -- 5. All steps succeeded. Commit the changes.
-        COMMIT;
+            -- 5. All steps succeeded. Commit the changes.
+            COMMIT;
 
-    END IF;
+        END IF;
 END$$
 DELIMITER ;
 
