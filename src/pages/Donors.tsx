@@ -200,7 +200,7 @@ const Donors = () => {
         </CardContent>
       </Card>
 
-      {/* Database Connection Note */}
+      {/* Database Connection Note
       <Card className="border-warning bg-warning/5">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
@@ -208,6 +208,7 @@ const Donors = () => {
           </p>
         </CardContent>
       </Card>
+      */}
     </div>
   );
 };

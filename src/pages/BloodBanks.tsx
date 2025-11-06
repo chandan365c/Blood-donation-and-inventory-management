@@ -1,14 +1,18 @@
+import React, { useEffect, useState } from "react";
 import { Building2, MapPin, Phone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { getBloodBanks } from "@/lib/apiClient";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { getBloodBanks, createBloodBank, updateBloodBank } from "@/lib/apiClient";
 import { BloodBank } from "@/lib/mockData";
 
-const BloodBanks = () => {
+const BloodBanks: React.FC = () => {
   const [banks, setBanks] = useState<BloodBank[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedBank, setSelectedBank] = useState<BloodBank | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -18,12 +22,8 @@ const BloodBanks = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Form state for new blood bank
-  const [form, setForm] = useState({
-    Name: '',
-    Address: '',
-    ContactPerson: '',
-  });
+  // Form state for new blood bank / edit
+  const [form, setForm] = useState({ Name: '', Address: '', ContactPerson: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,15 +34,39 @@ const BloodBanks = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await (await import("@/lib/apiClient")).createBloodBank({
-        ...form,
-      });
+      await createBloodBank({ ...form });
       setForm({ Name: '', Address: '', ContactPerson: '' });
-      // Refresh banks
       const updated = await getBloodBanks();
       setBanks(updated);
-    } catch (err) {
-      alert(err.message || "Failed to create blood bank");
+    } catch (err: any) {
+      alert(err?.message || "Failed to create blood bank");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openView = (bank: BloodBank) => {
+    setSelectedBank(bank);
+    setViewOpen(true);
+  };
+
+  const openEdit = (bank: BloodBank) => {
+    setSelectedBank(bank);
+    setForm({ Name: bank.Name || '', Address: bank.Address || '', ContactPerson: bank.ContactPerson || '' });
+    setEditOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBank) return;
+    setSubmitting(true);
+    try {
+      await updateBloodBank(selectedBank.BankID, { ...form });
+      const updated = await getBloodBanks();
+      setBanks(updated);
+      setEditOpen(false);
+    } catch (err: any) {
+      alert(err?.message || "Failed to update blood bank");
     } finally {
       setSubmitting(false);
     }
@@ -117,10 +141,10 @@ const BloodBanks = () => {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openView(bank)}>
                     View Details
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(bank)}>
                     Edit
                   </Button>
                 </div>
@@ -130,7 +154,7 @@ const BloodBanks = () => {
         </div>
       )}
 
-      {/* Database Note */}
+      {/* Database Note
       <Card className="border-primary bg-primary/5">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
@@ -139,8 +163,54 @@ const BloodBanks = () => {
           </p>
         </CardContent>
       </Card>
+      */}
+
+      {/* View Dialog */}
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bank Details</DialogTitle>
+            <DialogDescription>{selectedBank?.Name}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            <p><strong>Name:</strong> {selectedBank?.Name}</p>
+            <p><strong>Address:</strong> {selectedBank?.Address}</p>
+            <p><strong>Contact:</strong> {selectedBank?.ContactPerson || '—'}</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Blood Bank</DialogTitle>
+            <DialogDescription>Edit details and save</DialogDescription>
+          </DialogHeader>
+          <form className="grid gap-4" onSubmit={handleEditSubmit}>
+            <div>
+              <label className="block text-sm font-medium mb-1">Name</label>
+              <input name="Name" value={form.Name} onChange={(e)=>setForm({...form, Name: e.target.value})} className="w-full border rounded px-2 py-1" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Address</label>
+              <input name="Address" value={form.Address} onChange={(e)=>setForm({...form, Address: e.target.value})} className="w-full border rounded px-2 py-1" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Contact Person</label>
+              <input name="ContactPerson" value={form.ContactPerson} onChange={(e)=>setForm({...form, ContactPerson: e.target.value})} className="w-full border rounded px-2 py-1" />
+            </div>
+            <DialogFooter>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={submitting}>Save</Button>
+                <Button variant="ghost" onClick={()=>setEditOpen(false)}>Cancel</Button>
+              </div>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
+}
 
 export default BloodBanks;

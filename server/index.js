@@ -100,11 +100,50 @@ app.post('/api/hospitals', async (req, res) => {
   }
 });
 
+// Get hospital by id
+app.get('/api/hospitals/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!id) return res.status(400).json({ error: 'Invalid hospital id' });
+  try {
+    const [[row]] = await pool.query('SELECT HospitalID, Name, Address FROM Hospitals WHERE HospitalID = ?', [id]);
+    if (!row) return res.status(404).json({ error: 'Hospital not found' });
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update hospital
+app.put('/api/hospitals/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const { Name, Address } = req.body;
+  if (!id || !Name || !Address) return res.status(400).json({ error: 'Missing required fields' });
+  try {
+    await pool.execute('UPDATE Hospitals SET Name = ?, Address = ? WHERE HospitalID = ?', [Name, Address, id]);
+    const [[row]] = await pool.query('SELECT HospitalID, Name, Address FROM Hospitals WHERE HospitalID = ?', [id]);
+    res.json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- BloodBanks ---
 app.get('/api/bloodbanks', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT BankID, Name, Address, ContactPerson FROM BloodBanks ORDER BY BankID');
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/bloodbanks/:id', async (req, res) => {
+  const bankId = Number(req.params.id);
+  if (!bankId) return res.status(400).json({ error: 'Invalid bank id' });
+  try {
+    const [[row]] = await pool.query('SELECT BankID, Name, Address, ContactPerson FROM BloodBanks WHERE BankID = ?', [bankId]);
+    if (!row) return res.status(404).json({ error: 'Blood bank not found' });
+    res.json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -123,6 +162,23 @@ app.post('/api/bloodbanks', async (req, res) => {
     const insertedId = result.insertId;
     const [[row]] = await pool.query('SELECT * FROM BloodBanks WHERE BankID = ?', [insertedId]);
     res.status(201).json(row);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update a blood bank
+app.put('/api/bloodbanks/:id', async (req, res) => {
+  const bankId = Number(req.params.id);
+  const { Name, Address, ContactPerson } = req.body;
+  if (!bankId || !Name || !Address) return res.status(400).json({ error: 'Missing required fields' });
+  try {
+    await pool.execute(
+      `UPDATE BloodBanks SET Name = ?, Address = ?, ContactPerson = ? WHERE BankID = ?`,
+      [Name, Address, ContactPerson || null, bankId]
+    );
+    const [[row]] = await pool.query('SELECT BankID, Name, Address, ContactPerson FROM BloodBanks WHERE BankID = ?', [bankId]);
+    res.json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
