@@ -1,6 +1,6 @@
 # Blood Donation Inventory Management System
 
-This is a full-stack web application designed to manage the operations of a blood bank. It provides a solution for tracking donors, managing blood inventory, handling hospital requests, and managing partner hospitals and blood banks.
+This project is done as a part of the course *DATABASE MANAGEMENT SYSTEM (UE23CS351A)*. Blood donation and inventory management system is a full-stack web application designed to manage the operations of a blood bank. It provides a solution for tracking donors, managing blood inventory, handling hospital requests, and managing partner hospitals and blood banks.
 
 The application features a frontend built with **React** and **TypeScript**, and a backend API powered by **Node.js**, **Express**, and **MySQL**.
 
@@ -42,15 +42,18 @@ The application features a frontend built with **React** and **TypeScript**, and
 
 ## Tech Stack
 
-| Frontend | Backend | Database |
-| :--- | :--- | :--- |
-| React 18 | Node.js | MySQL |
-| TypeScript | Express | SQL Stored Procedures |
-| Vite | `mysql2/promise` | SQL Triggers & Functions |
-| React Router v6 | | |
-| Tailwind CSS | | |
-| shadcn/ui | | |
-| Lucide Icons | | |
+**Frontend**:
+- React + TypeScript
+- Vite (fast build)
+- Tailwind CSS (styling)
+- shadcn/ui (component library)
+- React Router (navigation)
+
+**Backend**:
+- Node.js + Express
+- mysql2 (promise-based connection pool)
+- CORS enabled
+- Environment configuration via .env
 
 -----
 
@@ -162,6 +165,23 @@ Fetches all requests for a specific hospital, joining with `BloodBanks` to get t
 CALL sp_GetHospitalRequestHistory(hospital_id);
 ```
 
+## Summary Table
+
+| Component | Type | Purpose | Used In |
+|-----------|------|---------|---------|
+| `trg_SetExpiryDate` | Trigger | Auto-calculate expiry (42 days) | Blood Inventory |
+| `trg_UpdateLastDonationDate` | Trigger | Update donor's last donation | Blood Inventory |
+| `trg_PreventUsingExpiredBlood` | Trigger | Block expired blood usage | Blood Inventory |
+| `trg_CheckRequestAmount` | Trigger | Validate request quantities | Blood Requests |
+| `trg_ValidateBloodType` | Trigger | Validate blood type | Donors |
+| `CheckDonorEligibility` | Function | Check 56-day cooldown | Donor Donations |
+| `GetAvailableUnits` | Function | Count available stock | Fulfillment |
+| `IsBloodCompatible` | Function | Check blood compatibility | Compatibility Checks |
+| `sp_RegisterDonor` | Procedure | Register new donor | Donor Management |
+| `sp_AddNewDonation` | Procedure | Record donation | Donations |
+| `sp_FulfillBloodRequest` | Procedure | Fulfill request (transaction) | Request Fulfillment |
+| `sp_GetHospitalRequestHistory` | Procedure | Get hospital's requests | Hospital Details |
+
 -----
 
 ## Endpoints
@@ -185,3 +205,10 @@ A brief overview of the main API endpoints.
 | `POST` | `/api/bloodbanks` | Create a new blood bank. |
 
 -----
+
+## Additional Resources
+
+- **blood.sql**: Full database schema and all objects
+- **server/index.js**: Backend API endpoints
+- **src/lib/apiClient.ts**: Frontend API client functions
+- **src/pages/**: React pages for each feature
