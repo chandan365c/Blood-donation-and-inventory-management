@@ -212,3 +212,6 @@ A brief overview of the main API endpoints.
 - **server/index.js**: Backend API endpoints
 - **src/lib/apiClient.ts**: Frontend API client functions
 - **src/pages/**: React pages for each feature
+
+## Collaborators
+- [Cheruku Manas Ram](https://github.com/satoqibi)
